@@ -1,17 +1,101 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "product": "CoreBlow",
+  "framework": "OWASP Top 10 for Agentic AI",
+  "version": "2.1.2",
   "threats": [
     {
-      "id": "secret-exposure",
+      "id": "prompt-injection",
+      "category": "ASI01: Prompt & Instruction Injection",
+      "owner": "turn-engine",
+      "severity": "critical",
+      "summary": "Direct or indirect adversarial prompts attempting to override agent instructions, safety constraints, or system guardrails.",
+      "patterns": [
+        "(?i)ignore\\s+(all\\s+)?(previous|prior|above)\\s+(instructions|directives|prompts)",
+        "(?i)disregard\\s+safety\\s+(guidelines|protocols)",
+        "(?i)you\\s+are\\s+now\\s+(in\\s+)?.*(dan|unrestricted|god)\\s+mode",
+        "(?i)override\\s+system\\s+(constraints|rules)"
+      ],
+      "remediation": "Enforce immutable System Constraints Layer (CONSTRAINTS.md) and sanitize user inputs before prompt assembly."
+    },
+    {
+      "id": "shell-injection",
+      "category": "ASI02: Command & Code Injection",
+      "owner": "sandbox",
+      "severity": "critical",
+      "summary": "Arbitrary operating system command execution or shell metacharacter chaining outside workspace boundaries.",
+      "patterns": [
+        "(?i)(;|\\|\\||&&)\\s*(rm\\s+-rf|chmod\\s+777|curl\\s+.*\\|\\s*sh|wget\\s+.*\\|\\s*bash)",
+        "(?i)/etc/(passwd|shadow)",
+        "(?i)(;|\\|\\||&&)\\s*cat\\s+/.*credentials"
+      ],
+      "remediation": "Route all child process executions through OS-level Seatbelt/Bubblewrap confinement with workspace-only write enforcement."
+    },
+    {
+      "id": "secret-exfiltration",
+      "category": "ASI03: Sensitive Information Disclosure",
       "owner": "security",
+      "severity": "critical",
+      "summary": "Exposure, leakage, or exfiltration of credentials, API tokens, private keys, or session tokens in prompts or tool outputs.",
+      "patterns": [
+        "ghp_[a-zA-Z0-9]{36}",
+        "gho_[a-zA-Z0-9]{36}",
+        "xox[baprs]-[0-9a-zA-Z-]{10,}",
+        "-----BEGIN\\s+(RSA|EC|DSA|OPENSSH)?\\s*PRIVATE\\s+KEY-----",
+        "(?i)(api[_-]?key|secret[_-]?token|bearer\\s+[a-zA-Z0-9_.-]{20,})"
+      ],
+      "remediation": "Apply PII and secret redaction filters before serializing conversation transcripts or broadcasting events."
+    },
+    {
+      "id": "ssrf",
+      "category": "ASI04: Server-Side Request Forgery",
+      "owner": "network",
       "severity": "high",
-      "summary": "Credentials, tokens, phone numbers, or private configuration are exposed."
+      "summary": "Probing internal loopback, private cloud metadata endpoints, or non-whitelisted internal network services via agent tools.",
+      "patterns": [
+        "(?i)https?://(169\\.254\\.169\\.254|metadata\\.google\\.internal|100\\.100\\.100\\.200)",
+        "(?i)https?://(127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0|::1):(?!(18789|80|443)\\b)",
+        "(?i)https?://(10\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|192\\.168\\.)"
+      ],
+      "remediation": "Block requests to private and link-local IP spaces unless explicitly allowlisted in CoreBlow Gateway network policy."
+    },
+    {
+      "id": "privilege-escalation",
+      "category": "ASI05: Privilege & Capability Escalation",
+      "owner": "rbac",
+      "severity": "high",
+      "summary": "Attempts by non-admin sessions to execute administrative methods (config.set, exec.approve, restart) without operator role.",
+      "patterns": [
+        "(?i)(sudo\\s+su|chmod\\s+u\\+s|doas\\s+|runas\\s+/user:administrator)",
+        "(?i)role\\s*[:=]\\s*[\"']?(operator\\.admin|root|system)[\"']?"
+      ],
+      "remediation": "Enforce strict RBAC tokens and require operator confirmation for high-privilege gateway methods."
     },
     {
       "id": "unsafe-plugin",
+      "category": "ASI06: Unsafe Plugin & Extension Execution",
       "owner": "plugins",
-      "severity": "medium",
-      "summary": "A plugin requests broad access or violates CoreBlow extension boundaries."
+      "severity": "high",
+      "summary": "A plugin requesting undeclared permissions, accessing arbitrary filesystem paths, or bypassing plugin-sdk boundaries.",
+      "patterns": [
+        "(?i)import\\s*.*from\\s*[\"']\\.\\./\\.\\./src/",
+        "(?i)require\\s*\\([\"']child_process[\"']\\)",
+        "(?i)process\\.env\\[[\"'](COREBLOW_TOKEN|GITHUB_TOKEN)[\"']\\]"
+      ],
+      "remediation": "Enforce CoreBlow plugin manifest schema verification and isolate plugin runtime execution."
+    },
+    {
+      "id": "supply-chain-tampering",
+      "category": "ASI07: Supply Chain & Integrity Compromise",
+      "owner": "release",
+      "severity": "critical",
+      "summary": "Distribution of untrusted, unchecksummed, or unsigned package tarballs or tampered plugin archives.",
+      "patterns": [
+        "(?i)curl\\s+-[a-zA-Z]*\\s+https?://(?!coreblow\\.com)[^\\s]+\\.tgz\\s*\\|\\s*tar",
+        "(?i)--no-verify-checksum",
+        "(?i)--insecure"
+      ],
+      "remediation": "Validate SHA-256 artifact checksums and GitHub OIDC provenance attestations before extracting any package."
     }
   ]
 }

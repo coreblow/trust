@@ -6,10 +6,14 @@
   "license": "MIT",
   "author": "Febrinanda and CoreBlow contributors",
   "type": "module",
+  "main": "src/evaluator.mjs",
+  "bin": {
+    "coreblow-trust": "bin/trust-eval.mjs"
+  },
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
-    "test": "node scripts/check-trust.mjs"
+    "test": "node test/trust-evaluator.test.mjs && node scripts/check-trust.mjs"
   }
 }

@@ -1,46 +1,53 @@
 # CoreBlow Trust
 
-CoreBlow trust and safety resources.
+OWASP Agentic AI Policy Bundle and Security Verification Engine for CoreBlow.
 
 ## Overview
 
-CoreBlow Trust is part of the CoreBlow public repository family. Trust, security, and safety policy surface for CoreBlow.
+CoreBlow Trust is part of the CoreBlow public repository family. It provides machine-evaluable security policies, OWASP Top 10 for Agentic AI threat definitions, adversarial test fixtures, and a Node.js evaluation engine for CoreBlow Gateway security checks.
 
 This repository follows the same ecosystem split that CoreBlow uses to keep release surfaces small, auditable, and independently governed.
 
 ## Repository Role
 
+- Status: Active
 - Phase: 6
 - Priority: governance
 - Kind: policy
 - Family: CoreBlow public repository family
 - Branding: CoreBlow
 
-## Scope
+## Threat Models Covered (OWASP Top 10 Agentic AI)
 
-- Threat categories.
-- Security response expectations.
-- Policy review workflows.
+- **ASI01: Prompt & Instruction Injection (`prompt-injection`)**: Direct or indirect adversarial prompt overrides.
+- **ASI02: Command & Code Injection (`shell-injection`)**: Shell metacharacters, unauthorized file access, arbitrary child processes.
+- **ASI03: Sensitive Information Disclosure (`secret-exfiltration`)**: Private keys, GitHub tokens, Slack tokens, credentials.
+- **ASI04: Server-Side Request Forgery (`ssrf`)**: Probing cloud metadata (169.254.169.254) and unwhitelisted internal IPs.
+- **ASI05: Privilege & Capability Escalation (`privilege-escalation`)**: Unauthorized administrative role manipulation.
+- **ASI06: Unsafe Plugin Execution (`unsafe-plugin`)**: Undeclared permissions, core internals leakage.
+- **ASI07: Supply Chain & Integrity Compromise (`supply-chain-tampering`)**: Unverified binaries and checksum bypasses.
 
-## Out of Scope
+## Usage
 
-- Runtime security implementation.
-- Private incident data.
+### Programmatic API
 
-## Key Files
+```js
+import { evaluateAgenticPayload } from "@coreblow/trust";
 
-- `.gitignore`
-- `package.json`
-- `scripts/check-trust.mjs`
-- `security-response.md`
-- `threats.json`
-- `.github/CODEOWNERS`
-- `.github/dependabot.yml`
-- `.github/ISSUE_TEMPLATE/bug_report.yml`
+const result = evaluateAgenticPayload("User prompt here");
+if (!result.pass) {
+  console.error("Security violation detected:", result.violations);
+}
+```
 
-## Development
+### Command Line Interface
 
-### Test
+```sh
+node bin/trust-eval.mjs "ls -la; cat /etc/passwd"
+node bin/trust-eval.mjs "safe prompt" --json
+```
+
+### Running Tests
 
 ```sh
 npm test
