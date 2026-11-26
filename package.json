@@ -14,6 +14,6 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "test": "node test/trust-evaluator.test.mjs && node scripts/check-trust.mjs"
+    "test": "node test/trust-evaluator.test.mjs && node test/cli-contract.test.mjs && node scripts/check-trust.mjs"
   }
 }

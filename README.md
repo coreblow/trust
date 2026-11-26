@@ -44,7 +44,8 @@ if (!result.pass) {
 
 ```sh
 node bin/trust-eval.mjs "ls -la; cat /etc/passwd"
-node bin/trust-eval.mjs "safe prompt" --json
+node bin/trust-eval.mjs --payload "status summary report" --json
+node bin/trust-eval.mjs --bundle-info --json
 ```
 
 ### Running Tests

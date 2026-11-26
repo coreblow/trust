@@ -79,6 +79,43 @@ export function evaluateAgenticPayload(payload, customBundle) {
   };
 }
 
+export function getBundleInfo(customBundle) {
+  const bundle = customBundle || loadThreatBundle();
+  const severities = {};
+  for (const threat of bundle.threats) {
+    const sev = String(threat.severity || "unknown").toLowerCase();
+    severities[sev] = (severities[sev] || 0) + 1;
+  }
+  return {
+    product: bundle.product,
+    framework: bundle.framework || "OWASP Top 10 for Agentic AI",
+    version: bundle.version || "0.0.0",
+    ruleCount: bundle.threats.length,
+    severities,
+    ruleIds: bundle.threats.map((t) => t.id),
+  };
+}
+
+export function formatAuditResult(result, customBundle) {
+  const info = getBundleInfo(customBundle);
+  return {
+    pass: result.pass,
+    framework: info.framework,
+    bundleVersion: info.version,
+    totalRules: info.ruleCount,
+    highestSeverity: result.highestSeverity,
+    violationCount: result.violationCount,
+    findings: result.violations.map((v) => ({
+      id: v.threatId,
+      category: v.category,
+      severity: v.severity,
+      owner: v.owner,
+      summary: v.summary,
+      remediation: v.remediation,
+    })),
+  };
+}
+
 function getHighestSeverity(violations) {
   if (violations.length === 0) return "none";
   const levels = ["low", "medium", "high", "critical"];
